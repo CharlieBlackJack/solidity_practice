@@ -71,5 +71,5 @@ contract Hello3Dot0 {
         hello = str;
     }
 
-    bool public amIright = true;
+    bool public amIright = false;
 }
