@@ -1,10 +1,23 @@
 {
 	"compiler": {
-		"version": "0.8.26+commit.8a97fa7a"
+		"version": "0.8.30+commit.73712a01"
 	},
 	"language": "Solidity",
 	"output": {
 		"abi": [
+			{
+				"inputs": [],
+				"name": "amIright",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
 			{
 				"inputs": [
 					{
@@ -77,7 +90,7 @@
 		"compilationTarget": {
 			"hello.sol": "Hello3Dot0"
 		},
-		"evmVersion": "shanghai",
+		"evmVersion": "prague",
 		"libraries": {},
 		"metadata": {
 			"bytecodeHash": "ipfs"
@@ -90,11 +103,11 @@
 	},
 	"sources": {
 		"hello.sol": {
-			"keccak256": "0x21ca4d599f7e26ae1522be2dd2de2dff6449ee67052db908b3f1ed6888b96809",
+			"keccak256": "0x8bff3e319dbbf314215d32d777b8da199e09533be9324936e41c9e29fb29dce7",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://129f1d32c2a88fd7af088f454112a73308cc5c952ff9ed5fa1cd6a68bf31ee16",
-				"dweb:/ipfs/QmWckEQKAJ585ULJEosLDuD9AYfbVm4teq3GCM4aejypde"
+				"bzz-raw://5cadc9ea42a22e77fbff0cc1f8fce5dade34248871a2b32926d24ec3fa7bd075",
+				"dweb:/ipfs/QmdNmoTbzdQXKe7JMb2RbjvLZEFxqH9BzGgFUb9sDdRiqi"
 			]
 		}
 	},
