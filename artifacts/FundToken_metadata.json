@@ -1,6 +1,6 @@
 {
 	"compiler": {
-		"version": "0.8.20+commit.a1b79de6"
+		"version": "0.8.26+commit.8a97fa7a"
 	},
 	"language": "Solidity",
 	"output": {
@@ -8,19 +8,36 @@
 			{
 				"inputs": [
 					{
-						"internalType": "uint256",
-						"name": "_lockTime",
-						"type": "uint256"
+						"internalType": "string",
+						"name": "_tokenName",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "_tokenSymbol",
+						"type": "string"
 					}
 				],
 				"stateMutability": "nonpayable",
 				"type": "constructor"
 			},
 			{
-				"inputs": [],
-				"name": "fund",
-				"outputs": [],
-				"stateMutability": "payable",
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "addr",
+						"type": "address"
+					}
+				],
+				"name": "balanceOf",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -31,7 +48,7 @@
 						"type": "address"
 					}
 				],
-				"name": "fundersToAmount",
+				"name": "balances",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -43,36 +60,16 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
-				"name": "getChainlinkDataFeedLatestAnswer",
-				"outputs": [
+				"inputs": [
 					{
-						"internalType": "int256",
-						"name": "",
-						"type": "int256"
+						"internalType": "uint256",
+						"name": "amountToMint",
+						"type": "uint256"
 					}
 				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "getFund",
+				"name": "mint",
 				"outputs": [],
 				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "getFundSuccess",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -90,51 +87,57 @@
 			},
 			{
 				"inputs": [],
-				"name": "refund",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
+				"name": "tokenName",
+				"outputs": [
 					{
-						"internalType": "address",
-						"name": "_erc20Addr",
-						"type": "address"
+						"internalType": "string",
+						"name": "",
+						"type": "string"
 					}
 				],
-				"name": "setErc20Addr",
-				"outputs": [],
-				"stateMutability": "nonpayable",
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "tokenSymbol",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "totalSupply",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
 				"inputs": [
 					{
 						"internalType": "address",
-						"name": "_funder",
+						"name": "payee",
 						"type": "address"
 					},
 					{
 						"internalType": "uint256",
-						"name": "_amountToUpdate",
+						"name": "amount",
 						"type": "uint256"
 					}
 				],
-				"name": "setFunderToAmount",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "_newOwner",
-						"type": "address"
-					}
-				],
-				"name": "trasferOwnership",
+				"name": "transfer",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -153,7 +156,7 @@
 	},
 	"settings": {
 		"compilationTarget": {
-			"lesson3/FundTokenERC20_flattened.sol": "FundMe"
+			"lesson3/FundToken.sol": "FundToken"
 		},
 		"evmVersion": "shanghai",
 		"libraries": {},
@@ -167,12 +170,12 @@
 		"remappings": []
 	},
 	"sources": {
-		"lesson3/FundTokenERC20_flattened.sol": {
-			"keccak256": "0xa7481649d97a04fc41279c37ed2f601c17959ab2e03f58c3cfbff6bd2ed33e33",
+		"lesson3/FundToken.sol": {
+			"keccak256": "0x5504b026247e4f377e6620bc83261a718d349436dfbf1b3b2348139f7ab30ebf",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://8726db2376675d5ad9ff2b53b1d30563d8925975df04abf06bb95cf3f60bf3c1",
-				"dweb:/ipfs/QmRL69adpn9NJimGec6rWmKmL4hBYPYeEGwfH4cEPvKKty"
+				"bzz-raw://ff405e3b934c61639e5b630413cf392e9b26ddbc1d9a00881e1b4bd39ab7d7b8",
+				"dweb:/ipfs/QmeHVAshhQrgUf98x2GjxPu23gGoemMmADMPwJzcyopLiY"
 			]
 		}
 	},
