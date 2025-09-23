@@ -11,17 +11,21 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interf
 contract FundMe {
     mapping(address => uint256) public fundersToAmount;
 
-    uint256 constant MINIMUM_VALUE_100USD = 100 * 10**18; // 最小值 100USD
+    uint256 constant MINIMUM_VALUE_100USD = 100 * 10 ** 18; // 最小值 100USD
 
     AggregatorV3Interface internal dataFeed;
 
-    uint256 constant TARGET = 1000 * 10**18;
+    uint256 constant TARGET = 1000 * 10 ** 18;
 
     address public owner;
 
     uint256 deploymentTimestamp;
 
     uint256 lockTime;
+
+    address erc20Addr;
+
+    bool public getFundSuccess = false;
 
     constructor(uint256 _lockTime) {
         dataFeed = AggregatorV3Interface(
@@ -62,13 +66,11 @@ contract FundMe {
         return answer;
     }
 
-    function convertEthToUsd(uint256 _ethAmount)
-        internal
-        view
-        returns (uint256)
-    {
+    function convertEthToUsd(
+        uint256 _ethAmount
+    ) internal view returns (uint256) {
         uint256 ethPrice = uint256(getChainlinkDataFeedLatestAnswer());
-        return (_ethAmount * ethPrice) / (10**8);
+        return (_ethAmount * ethPrice) / (10 ** 8);
         // 一个10 ** 18的数字_ethAmount 乘以 一个10 ** 8次方的数字ethPrice， 再除以一个 10 ** 8，结果是一个 10 ** 18的数字
 
         // 精度说明
@@ -102,6 +104,8 @@ contract FundMe {
         require(success, "tx failed.");
 
         fundersToAmount[msg.sender] = 0;
+
+        getFundSuccess = true;
     }
 
     function refund() external windowClosed {
@@ -120,6 +124,22 @@ contract FundMe {
         require(success, "tx failed.");
 
         fundersToAmount[msg.sender] = 0;
+    }
+
+    function setFunderToAmount(
+        address _funder,
+        uint256 _amountToUpdate
+    ) external {
+        require(
+            msg.sender == erc20Addr,
+            "You do not have a permission to call this function."
+        );
+
+        fundersToAmount[_funder] = _amountToUpdate;
+    }
+
+    function setErc20Addr(address _erc20Addr) public onlyOwner {
+        erc20Addr = _erc20Addr;
     }
 
     modifier windowClosed() {
