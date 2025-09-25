@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+// 地址变了，下面这个链接无了
+// import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import {AggregatorV2V3Interface} from "./interfaces/AggregatorV2V3Interface.sol";
 
 // 1. 创建一个收款函数
 // 2. 记录投资人并且查看
@@ -13,7 +15,7 @@ contract FundMe {
 
     uint256 constant MINIMUM_VALUE_100USD = 100 * 10 ** 18; // 最小值 100USD
 
-    AggregatorV3Interface internal dataFeed;
+    AggregatorV2V3Interface public dataFeed;
 
     uint256 constant TARGET = 1000 * 10 ** 18;
 
@@ -27,10 +29,12 @@ contract FundMe {
 
     bool public getFundSuccess = false;
 
-    constructor(uint256 _lockTime) {
-        dataFeed = AggregatorV3Interface(
-            0x694AA1769357215DE4FAC081bf1f309aDC325306
-        );
+    event FundWithdrawnByOwner(uint256);
+
+    event RefundByFunder(address, uint256);
+
+    constructor(uint256 _lockTime, address _dataFeedAddr) {
+        dataFeed = AggregatorV2V3Interface(_dataFeedAddr);
 
         owner = msg.sender;
 
@@ -97,15 +101,17 @@ contract FundMe {
 
         // call (转账时可带数据，可执行其他逻辑) : transfer ETH with data return value of function and bool
         bool success;
-        (success, ) = payable(msg.sender).call{value: address(this).balance}(
-            ""
-        );
+        uint256 balance = address(this).balance;
+        (success, ) = payable(msg.sender).call{value: balance}("");
 
         require(success, "tx failed.");
 
         fundersToAmount[msg.sender] = 0;
 
         getFundSuccess = true;
+
+        // emit event
+        emit FundWithdrawnByOwner(balance);
     }
 
     function refund() external windowClosed {
@@ -117,13 +123,14 @@ contract FundMe {
         require(fundersToAmount[msg.sender] != 0, "There is no fund for you");
 
         bool success;
-        (success, ) = payable(msg.sender).call{
-            value: fundersToAmount[msg.sender]
-        }("");
+        uint256 balance = fundersToAmount[msg.sender];
+        (success, ) = payable(msg.sender).call{value: balance}("");
 
         require(success, "tx failed.");
 
         fundersToAmount[msg.sender] = 0;
+
+        emit RefundByFunder(msg.sender, balance);
     }
 
     function setFunderToAmount(

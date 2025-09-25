@@ -1,0 +1,45 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/FundMe.sol": {
+      "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.20;\r\n\r\n// 地址变了，下面这个链接无了\r\n// import {AggregatorV3Interface} from \"@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol\";\r\nimport {AggregatorV2V3Interface} from \"./interfaces/AggregatorV2V3Interface.sol\";\r\n\r\n// 1. 创建一个收款函数\r\n// 2. 记录投资人并且查看\r\n// 3. 在锁定期内，达到目标值，生产商可以提款\r\n// 4. 在锁定期内，没达到目标值，投资人可以在锁定期后退款\r\n\r\ncontract FundMe {\r\n    mapping(address => uint256) public fundersToAmount;\r\n\r\n    uint256 constant MINIMUM_VALUE_100USD = 100 * 10 ** 18; // 最小值 100USD\r\n\r\n    AggregatorV2V3Interface public dataFeed;\r\n\r\n    uint256 constant TARGET = 1000 * 10 ** 18;\r\n\r\n    address public owner;\r\n\r\n    uint256 deploymentTimestamp;\r\n\r\n    uint256 lockTime;\r\n\r\n    address erc20Addr;\r\n\r\n    bool public getFundSuccess = false;\r\n\r\n    constructor(uint256 _lockTime, address _dataFeedAddr) {\r\n        dataFeed = AggregatorV2V3Interface(_dataFeedAddr);\r\n\r\n        owner = msg.sender;\r\n\r\n        deploymentTimestamp = block.timestamp;\r\n\r\n        lockTime = _lockTime;\r\n    }\r\n\r\n    function fund() external payable {\r\n        require(\r\n            convertEthToUsd(msg.value) >= MINIMUM_VALUE_100USD,\r\n            \"Send more ETH\"\r\n        ); // revert\r\n\r\n        require(\r\n            block.timestamp < deploymentTimestamp + lockTime,\r\n            \"Window is closed.\"\r\n        );\r\n\r\n        fundersToAmount[msg.sender] = msg.value;\r\n    }\r\n\r\n    function getChainlinkDataFeedLatestAnswer() public view returns (int256) {\r\n        // prettier-ignore\r\n        (\r\n            /* uint80 roundId */,\r\n            int256 answer,\r\n            /*uint256 startedAt*/,\r\n            /*uint256 updatedAt*/,\r\n            /*uint80 answeredInRound*/\r\n        ) = dataFeed.latestRoundData();\r\n\r\n        return answer;\r\n    }\r\n\r\n    function convertEthToUsd(\r\n        uint256 _ethAmount\r\n    ) internal view returns (uint256) {\r\n        uint256 ethPrice = uint256(getChainlinkDataFeedLatestAnswer());\r\n        return (_ethAmount * ethPrice) / (10 ** 8);\r\n        // 一个10 ** 18的数字_ethAmount 乘以 一个10 ** 8次方的数字ethPrice， 再除以一个 10 ** 8，结果是一个 10 ** 18的数字\r\n\r\n        // 精度说明\r\n        // ETH / USD precision = 10 ** 8\r\n        // X / ETH precision =  10 ** 18\r\n    }\r\n\r\n    function trasferOwnership(address _newOwner) public onlyOwner {\r\n        owner = _newOwner;\r\n    }\r\n\r\n    function getFund() external windowClosed onlyOwner {\r\n        require(\r\n            convertEthToUsd(address(this).balance) >= TARGET,\r\n            \"Target is not reached.\"\r\n        );\r\n\r\n        // transfer (纯转账) : transfer ETH and revert if tx failed\r\n        // payable(msg.sender).transfer(address(this).balance);\r\n\r\n        // send (纯转账) :  transfer ETH and return false if tx failed\r\n        // bool success = payable(msg.sender).send(address(this).balance);\r\n        // require(success, \"tx failed.\");\r\n\r\n        // call (转账时可带数据，可执行其他逻辑) : transfer ETH with data return value of function and bool\r\n        bool success;\r\n        (success, ) = payable(msg.sender).call{value: address(this).balance}(\r\n            \"\"\r\n        );\r\n\r\n        require(success, \"tx failed.\");\r\n\r\n        fundersToAmount[msg.sender] = 0;\r\n\r\n        getFundSuccess = true;\r\n    }\r\n\r\n    function refund() external windowClosed {\r\n        require(\r\n            convertEthToUsd(address(this).balance) < TARGET,\r\n            \"Target is reached.\"\r\n        );\r\n\r\n        require(fundersToAmount[msg.sender] != 0, \"There is no fund for you\");\r\n\r\n        bool success;\r\n        (success, ) = payable(msg.sender).call{\r\n            value: fundersToAmount[msg.sender]\r\n        }(\"\");\r\n\r\n        require(success, \"tx failed.\");\r\n\r\n        fundersToAmount[msg.sender] = 0;\r\n    }\r\n\r\n    function setFunderToAmount(\r\n        address _funder,\r\n        uint256 _amountToUpdate\r\n    ) external {\r\n        require(\r\n            msg.sender == erc20Addr,\r\n            \"You do not have a permission to call this function.\"\r\n        );\r\n\r\n        fundersToAmount[_funder] = _amountToUpdate;\r\n    }\r\n\r\n    function setErc20Addr(address _erc20Addr) public onlyOwner {\r\n        erc20Addr = _erc20Addr;\r\n    }\r\n\r\n    modifier windowClosed() {\r\n        require(\r\n            block.timestamp >= deploymentTimestamp + lockTime,\r\n            \"Window is not closed.\"\r\n        );\r\n        _;\r\n    }\r\n\r\n    modifier onlyOwner() {\r\n        require(\r\n            msg.sender == owner,\r\n            \"This function can only be called by owner.\"\r\n        );\r\n        _;\r\n    }\r\n}\r\n"
+    },
+    "contracts/interfaces/AggregatorInterface.sol": {
+      "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.0;\r\n\r\n// solhint-disable-next-line interface-starts-with-i\r\ninterface AggregatorInterface {\r\n    function latestAnswer() external view returns (int256);\r\n\r\n    function latestTimestamp() external view returns (uint256);\r\n\r\n    function latestRound() external view returns (uint256);\r\n\r\n    function getAnswer(uint256 roundId) external view returns (int256);\r\n\r\n    function getTimestamp(uint256 roundId) external view returns (uint256);\r\n\r\n    event AnswerUpdated(\r\n        int256 indexed current,\r\n        uint256 indexed roundId,\r\n        uint256 updatedAt\r\n    );\r\n\r\n    event NewRound(\r\n        uint256 indexed roundId,\r\n        address indexed startedBy,\r\n        uint256 startedAt\r\n    );\r\n}\r\n"
+    },
+    "contracts/interfaces/AggregatorV2V3Interface.sol": {
+      "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.0;\r\n\r\nimport {AggregatorInterface} from \"./AggregatorInterface.sol\";\r\nimport {AggregatorV3Interface} from \"./AggregatorV3Interface.sol\";\r\n\r\n// solhint-disable-next-line interface-starts-with-i\r\ninterface AggregatorV2V3Interface is\r\n    AggregatorInterface,\r\n    AggregatorV3Interface\r\n{}\r\n"
+    },
+    "contracts/interfaces/AggregatorV3Interface.sol": {
+      "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.0;\r\n\r\n// solhint-disable-next-line interface-starts-with-i\r\ninterface AggregatorV3Interface {\r\n    function decimals() external view returns (uint8);\r\n\r\n    function description() external view returns (string memory);\r\n\r\n    function version() external view returns (uint256);\r\n\r\n    function getRoundData(\r\n        uint80 _roundId\r\n    )\r\n        external\r\n        view\r\n        returns (\r\n            uint80 roundId,\r\n            int256 answer,\r\n            uint256 startedAt,\r\n            uint256 updatedAt,\r\n            uint80 answeredInRound\r\n        );\r\n\r\n    function latestRoundData()\r\n        external\r\n        view\r\n        returns (\r\n            uint80 roundId,\r\n            int256 answer,\r\n            uint256 startedAt,\r\n            uint256 updatedAt,\r\n            uint80 answeredInRound\r\n        );\r\n}\r\n"
+    }
+  },
+  "settings": {
+    "evmVersion": "paris",
+    "optimizer": {
+      "enabled": false,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}
